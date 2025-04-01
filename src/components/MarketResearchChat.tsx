@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -9,8 +10,12 @@ import LoadingMessage from "@/components/LoadingMessage";
 import ErrorMessage from "@/components/ErrorMessage";
 import ChatInput from "@/components/ChatInput";
 import SuggestionChip from "@/components/SuggestionChip";
-import { BarChart, LineChart, TrendingUp, Users, Key } from "lucide-react";
+import { BarChart, LineChart, TrendingUp, Users, Key, Settings } from "lucide-react";
 import FeatureHighlight from "@/components/FeatureHighlight";
+import APIKeyModal from "@/components/APIKeyModal";
+import { Button } from "@/components/ui/button";
+
+const GEMINI_API_KEY_STORAGE_KEY = "market-mind-spark-gemini-api-key";
 
 const initialMessages: Message[] = [
   {
@@ -28,8 +33,12 @@ const MarketResearchChat: React.FC = () => {
     error: null,
   });
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
-  const [isApiKeySet, setIsApiKeySet] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
+    // Load API key from localStorage on initial render
+    return localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY) || '';
+  });
+  const [isApiKeySet, setIsApiKeySet] = useState(() => Boolean(localStorage.getItem(GEMINI_API_KEY_STORAGE_KEY)));
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -44,13 +53,23 @@ const MarketResearchChat: React.FC = () => {
     if (key.trim()) {
       setGeminiApiKey(key);
       setIsApiKeySet(true);
-      toast.success("API Key added successfully!");
+      localStorage.setItem(GEMINI_API_KEY_STORAGE_KEY, key);
+      toast.success("API Key saved successfully!", {
+        description: "Your key is stored securely in your browser.",
+      });
     }
+  };
+  
+  const clearApiKey = () => {
+    localStorage.removeItem(GEMINI_API_KEY_STORAGE_KEY);
+    setGeminiApiKey('');
+    setIsApiKeySet(false);
+    toast.info("API Key removed");
   };
 
   const generateResponse = async (query: string) => {
     if (!isApiKeySet) {
-      toast.error("Please enter your Gemini API key first.");
+      setIsApiKeyModalOpen(true);
       return;
     }
 
@@ -100,7 +119,7 @@ const MarketResearchChat: React.FC = () => {
 
   const handleSendMessage = (content: string) => {
     if (!isApiKeySet) {
-      toast.error("Please enter your Gemini API key first.");
+      setIsApiKeyModalOpen(true);
       return;
     }
 
@@ -148,24 +167,34 @@ const MarketResearchChat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto">
-      {!isApiKeySet && (
-        <div className="fixed top-4 right-4 z-50 flex items-center space-x-2">
-          <input
-            type="text"
-            placeholder="Enter Gemini API Key"
-            value={geminiApiKey}
-            onChange={(e) => setGeminiApiKey(e.target.value)}
-            className="px-3 py-2 border rounded-md"
-          />
-          <button
-            onClick={() => handleApiKeySubmit(geminiApiKey)}
-            className="bg-primary text-white px-4 py-2 rounded-md flex items-center gap-2"
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto animate-fadeIn">
+      <div className="fixed top-4 right-4 z-50 flex items-center space-x-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="animate-fadeIn"
+          onClick={() => setIsApiKeyModalOpen(true)}
+        >
+          <Settings size={16} className="mr-2" />
+          {isApiKeySet ? "Change API Key" : "Set API Key"}
+        </Button>
+        {isApiKeySet && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="animate-fadeIn text-destructive"
+            onClick={clearApiKey}
           >
-            <Key size={16} /> Set Key
-          </button>
-        </div>
-      )}
+            Clear API Key
+          </Button>
+        )}
+      </div>
+
+      <APIKeyModal
+        isOpen={isApiKeyModalOpen}
+        onClose={() => setIsApiKeyModalOpen(false)}
+        onSubmit={handleApiKeySubmit}
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="space-y-2">
@@ -178,7 +207,7 @@ const MarketResearchChat: React.FC = () => {
           {chatState.error && <ErrorMessage message={chatState.error} />}
           
           {chatState.messages.length === 1 && (
-            <div className="my-8">
+            <div className="my-8 animate-scaleIn">
               <h2 className="text-xl font-semibold mb-4 text-center">What Market Mind Spark can do for you</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FeatureHighlight
@@ -206,7 +235,7 @@ const MarketResearchChat: React.FC = () => {
           )}
           
           {showSuggestions && (
-            <div className="my-6">
+            <div className="my-6 animate-slideUp">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Try asking about:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {marketQuerySuggestions.map((suggestion, index) => (
@@ -224,7 +253,7 @@ const MarketResearchChat: React.FC = () => {
         </div>
       </div>
       
-      <div className="border-t bg-background/80 backdrop-blur-sm p-4">
+      <div className="border-t bg-background/80 backdrop-blur-sm p-4 animate-slideUp">
         <ChatInput 
           onSend={handleSendMessage} 
           disabled={chatState.isLoading}
