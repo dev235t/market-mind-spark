@@ -1,7 +1,7 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ChatState, Message } from "@/types/chat";
 import { validateMarketQuery, marketQuerySuggestions } from "@/utils/marketAnalysisValidator";
 import ChatMessage from "@/components/ChatMessage";
@@ -9,7 +9,7 @@ import LoadingMessage from "@/components/LoadingMessage";
 import ErrorMessage from "@/components/ErrorMessage";
 import ChatInput from "@/components/ChatInput";
 import SuggestionChip from "@/components/SuggestionChip";
-import { BarChart, LineChart, TrendingUp, Users } from "lucide-react";
+import { BarChart, LineChart, TrendingUp, Users, Key } from "lucide-react";
 import FeatureHighlight from "@/components/FeatureHighlight";
 
 const initialMessages: Message[] = [
@@ -28,6 +28,8 @@ const MarketResearchChat: React.FC = () => {
     error: null,
   });
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
+  const [isApiKeySet, setIsApiKeySet] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,72 +40,33 @@ const MarketResearchChat: React.FC = () => {
     scrollToBottom();
   }, [chatState.messages, chatState.isLoading]);
 
-  const handleSendMessage = (content: string) => {
-    // Validate if the message is related to market research
-    const validation = validateMarketQuery(content);
-    
-    if (!validation.isValid) {
-      setChatState(prev => ({
-        ...prev,
-        error: validation.errorMessage || "Please ask a market research related question.",
-      }));
-      
-      // Clear error after 5 seconds
-      setTimeout(() => {
-        setChatState(prev => ({ ...prev, error: null }));
-      }, 5000);
-      
-      return;
+  const handleApiKeySubmit = (key: string) => {
+    if (key.trim()) {
+      setGeminiApiKey(key);
+      setIsApiKeySet(true);
+      toast.success("API Key added successfully!");
     }
-    
-    // Clear any previous errors
-    if (chatState.error) {
-      setChatState(prev => ({ ...prev, error: null }));
-    }
-    
-    // Add user message
-    const userMessage: Message = {
-      id: uuidv4(),
-      role: "user",
-      content,
-      timestamp: new Date(),
-    };
-    
-    setChatState(prev => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-      isLoading: true,
-    }));
-    
-    // Hide suggestions after user sends first message
-    if (showSuggestions) {
-      setShowSuggestions(false);
-    }
-    
-    // Simulate AI response (this would be replaced with an actual API call)
-    setTimeout(() => {
-      generateResponse(content);
-    }, 1500);
   };
 
-  const generateResponse = (query: string) => {
-    // This is a simulated response. In a real application, you would call an API.
+  const generateResponse = async (query: string) => {
+    if (!isApiKeySet) {
+      toast.error("Please enter your Gemini API key first.");
+      return;
+    }
+
     try {
-      // Generate a more complex response based on the query
-      let responseContent = "";
-      
-      if (query.toLowerCase().includes("trend")) {
-        responseContent = `# Market Trend Analysis\n\nBased on recent data, the following trends are emerging:\n\n1. Increased consumer preference for sustainable products\n2. Growing adoption of subscription-based models\n3. Rise in mobile-first shopping experiences\n\nThese trends indicate a shift towards more conscious consumption patterns and convenience-oriented services.`;
-      } else if (query.toLowerCase().includes("competition") || query.toLowerCase().includes("competitor")) {
-        responseContent = `# Competitive Landscape\n\nThe market currently shows the following competitive dynamics:\n\n- Market Leaders: Companies A, B, and C control 65% of market share\n- Emerging Players: Several startups focusing on niche segments\n- Competitive Factors: Price, quality, and customer service remain key differentiators\n\nA direct competitor analysis would require more specific industry information.`;
-      } else if (query.toLowerCase().includes("consumer") || query.toLowerCase().includes("customer")) {
-        responseContent = `# Consumer Behavior Insights\n\nRecent consumer research indicates:\n\n- Purchase decisions are increasingly influenced by social media\n- Consumers expect seamless omnichannel experiences\n- 68% of customers research products online before making purchases\n- Brand loyalty is declining, with 43% of consumers willing to switch brands for better experiences`;
-      } else if (query.toLowerCase().includes("swot")) {
-        responseContent = `# SWOT Analysis Framework\n\n## Strengths\n- Unique selling proposition\n- Strong brand recognition\n- Efficient supply chain\n\n## Weaknesses\n- Limited market reach\n- Higher production costs\n- Talent acquisition challenges\n\n## Opportunities\n- Emerging market segments\n- Technological innovations\n- Strategic partnerships\n\n## Threats\n- Intense competition\n- Changing regulations\n- Economic uncertainty`;
-      } else {
-        responseContent = `Based on my market analysis, there are several key insights to consider:\n\n1. The market is showing a compound annual growth rate (CAGR) of approximately 7.2%\n\n2. Consumer preferences are shifting toward more sustainable and ethically sourced products\n\n3. Digital transformation continues to disrupt traditional business models in this sector\n\nTo gain competitive advantage, companies should focus on innovation, customer experience enhancement, and operational efficiency. Would you like me to elaborate on any specific aspect of this market analysis?`;
-      }
-      
+      const genAI = new GoogleGenerativeAI(geminiApiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+      const result = await model.generateContent(`
+        You are a Market Research AI Assistant. Provide a professional and detailed market analysis based on the following query: ${query}
+        
+        Include actionable insights, trends, and strategic recommendations. 
+        Format your response in markdown for clear readability.
+      `);
+
+      const responseContent = result.response.text();
+
       const assistantMessage: Message = {
         id: uuidv4(),
         role: "assistant",
@@ -117,22 +80,67 @@ const MarketResearchChat: React.FC = () => {
         isLoading: false,
       }));
       
-      // Show a toast notification for successfully completed analysis
       toast.success("Market analysis completed", {
-        description: "The requested market insights have been generated.",
+        description: "Insights generated using Gemini AI.",
       });
       
     } catch (error) {
+      console.error("Gemini API Error:", error);
       setChatState(prev => ({
         ...prev,
         isLoading: false,
-        error: "Sorry, there was an error analyzing your market query. Please try again.",
+        error: "Sorry, there was an error analyzing your market query. Please check your API key.",
       }));
       
       toast.error("Analysis failed", {
-        description: "There was an error processing your request.",
+        description: "Error with Gemini API. Check your API key.",
       });
     }
+  };
+
+  const handleSendMessage = (content: string) => {
+    if (!isApiKeySet) {
+      toast.error("Please enter your Gemini API key first.");
+      return;
+    }
+
+    const validation = validateMarketQuery(content);
+    
+    if (!validation.isValid) {
+      setChatState(prev => ({
+        ...prev,
+        error: validation.errorMessage || "Please ask a market research related question.",
+      }));
+      
+      setTimeout(() => {
+        setChatState(prev => ({ ...prev, error: null }));
+      }, 5000);
+      
+      return;
+    }
+    
+    if (chatState.error) {
+      setChatState(prev => ({ ...prev, error: null }));
+    }
+    
+    const userMessage: Message = {
+      id: uuidv4(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+    };
+    
+    setChatState(prev => ({
+      ...prev,
+      messages: [...prev.messages, userMessage],
+      isLoading: true,
+    }));
+    
+    if (showSuggestions) {
+      setShowSuggestions(false);
+    }
+    
+    generateResponse(content);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -141,8 +149,25 @@ const MarketResearchChat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto">
+      {!isApiKeySet && (
+        <div className="fixed top-4 right-4 z-50 flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Enter Gemini API Key"
+            value={geminiApiKey}
+            onChange={(e) => setGeminiApiKey(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          />
+          <button
+            onClick={() => handleApiKeySubmit(geminiApiKey)}
+            className="bg-primary text-white px-4 py-2 rounded-md flex items-center gap-2"
+          >
+            <Key size={16} /> Set Key
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto px-4 py-6">
-        {/* Messages section */}
         <div className="space-y-2">
           {chatState.messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
@@ -152,7 +177,6 @@ const MarketResearchChat: React.FC = () => {
           
           {chatState.error && <ErrorMessage message={chatState.error} />}
           
-          {/* Feature highlights shown when no conversation has started */}
           {chatState.messages.length === 1 && (
             <div className="my-8">
               <h2 className="text-xl font-semibold mb-4 text-center">What Market Mind Spark can do for you</h2>
@@ -181,7 +205,6 @@ const MarketResearchChat: React.FC = () => {
             </div>
           )}
           
-          {/* Suggestions */}
           {showSuggestions && (
             <div className="my-6">
               <h3 className="text-sm font-medium text-muted-foreground mb-3">Try asking about:</h3>
@@ -201,7 +224,6 @@ const MarketResearchChat: React.FC = () => {
         </div>
       </div>
       
-      {/* Input section */}
       <div className="border-t bg-background/80 backdrop-blur-sm p-4">
         <ChatInput 
           onSend={handleSendMessage} 
