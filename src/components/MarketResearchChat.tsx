@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -10,10 +9,9 @@ import LoadingMessage from "@/components/LoadingMessage";
 import ErrorMessage from "@/components/ErrorMessage";
 import ChatInput from "@/components/ChatInput";
 import SuggestionChip from "@/components/SuggestionChip";
-import { BarChart, LineChart, TrendingUp, Users } from "lucide-react";
+import { TrendingUp, BarChart, Users, LineChart } from "lucide-react";
 import FeatureHighlight from "@/components/FeatureHighlight";
 
-// Replace this with your actual Gemini API key
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 
 const initialMessages: Message[] = [
@@ -145,25 +143,25 @@ const MarketResearchChat: React.FC = () => {
           
           {chatState.messages.length === 1 && (
             <div className="my-8 animate-scaleIn space-y-6">
-              <h2 className="text-2xl font-bold text-center text-brand-dark mb-6">What Market Mind Spark can do for you</h2>
+              <h2 className="text-2xl font-bold text-center text-green-700 mb-6">What Market Mind Spark can do for you</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FeatureHighlight
-                  icon={<TrendingUp size={24} className="text-brand" />}
+                  icon={<TrendingUp size={24} className="text-green-500" />}
                   title="Trend Analysis"
                   description="Identify emerging market trends and patterns to stay ahead of the competition."
                 />
                 <FeatureHighlight
-                  icon={<BarChart size={24} className="text-brand" />}
+                  icon={<BarChart size={24} className="text-green-500" />}
                   title="Competitive Research"
                   description="Analyze competitors' strengths and weaknesses to find your market advantage."
                 />
                 <FeatureHighlight
-                  icon={<Users size={24} className="text-brand" />}
+                  icon={<Users size={24} className="text-green-500" />}
                   title="Consumer Insights"
                   description="Understand customer behavior, preferences, and purchase decisions."
                 />
                 <FeatureHighlight
-                  icon={<LineChart size={24} className="text-brand" />}
+                  icon={<LineChart size={24} className="text-green-500" />}
                   title="Growth Opportunities"
                   description="Discover untapped market segments and expansion possibilities."
                 />
@@ -196,7 +194,7 @@ const MarketResearchChat: React.FC = () => {
           disabled={chatState.isLoading}
         />
         <p className="text-xs text-center text-muted-foreground mt-4">
-          Market Mind Spark specializes in <strong className="text-brand">market research</strong>, <strong className="text-brand">trend analysis</strong>, and <strong className="text-brand">competitive insights</strong>.
+          Market Mind Spark specializes in <strong className="text-green-600">market research</strong>, <strong className="text-green-600">trend analysis</strong>, and <strong className="text-green-600">competitive insights</strong>.
         </p>
       </div>
     </div>
