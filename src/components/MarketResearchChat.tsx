@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -131,9 +132,9 @@ const MarketResearchChat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto animate-fadeIn">
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="space-y-2">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto animate-fadeIn space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
+        <div className="space-y-6">
           {chatState.messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
@@ -143,26 +144,26 @@ const MarketResearchChat: React.FC = () => {
           {chatState.error && <ErrorMessage message={chatState.error} />}
           
           {chatState.messages.length === 1 && (
-            <div className="my-8 animate-scaleIn">
-              <h2 className="text-xl font-semibold mb-4 text-center">What Market Mind Spark can do for you</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="my-8 animate-scaleIn space-y-6">
+              <h2 className="text-2xl font-bold text-center text-brand-dark mb-6">What Market Mind Spark can do for you</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FeatureHighlight
-                  icon={<TrendingUp size={24} />}
+                  icon={<TrendingUp size={24} className="text-brand" />}
                   title="Trend Analysis"
                   description="Identify emerging market trends and patterns to stay ahead of the competition."
                 />
                 <FeatureHighlight
-                  icon={<BarChart size={24} />}
+                  icon={<BarChart size={24} className="text-brand" />}
                   title="Competitive Research"
                   description="Analyze competitors' strengths and weaknesses to find your market advantage."
                 />
                 <FeatureHighlight
-                  icon={<Users size={24} />}
+                  icon={<Users size={24} className="text-brand" />}
                   title="Consumer Insights"
                   description="Understand customer behavior, preferences, and purchase decisions."
                 />
                 <FeatureHighlight
-                  icon={<LineChart size={24} />}
+                  icon={<LineChart size={24} className="text-brand" />}
                   title="Growth Opportunities"
                   description="Discover untapped market segments and expansion possibilities."
                 />
@@ -171,9 +172,9 @@ const MarketResearchChat: React.FC = () => {
           )}
           
           {showSuggestions && (
-            <div className="my-6 animate-slideUp">
-              <h3 className="text-sm font-medium text-muted-foreground mb-3">Try asking about:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="my-8 animate-slideUp space-y-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-4">Try asking about:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {marketQuerySuggestions.map((suggestion, index) => (
                   <SuggestionChip
                     key={index}
@@ -194,8 +195,8 @@ const MarketResearchChat: React.FC = () => {
           onSend={handleSendMessage} 
           disabled={chatState.isLoading}
         />
-        <p className="text-xs text-center text-muted-foreground mt-2">
-          Market Mind Spark specializes in market research, trend analysis, and competitive insights.
+        <p className="text-xs text-center text-muted-foreground mt-4">
+          Market Mind Spark specializes in <strong className="text-brand">market research</strong>, <strong className="text-brand">trend analysis</strong>, and <strong className="text-brand">competitive insights</strong>.
         </p>
       </div>
     </div>
