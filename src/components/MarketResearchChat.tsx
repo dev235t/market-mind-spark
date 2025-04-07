@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -14,7 +13,7 @@ import { BarChart, LineChart, TrendingUp, Users } from "lucide-react";
 import FeatureHighlight from "@/components/FeatureHighlight";
 
 // Replace this with your actual Gemini API key
-const GEMINI_API_KEY = "your-api-key-here"; // 👈 PUT YOUR API KEY HERE
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 
 const initialMessages: Message[] = [
   {
