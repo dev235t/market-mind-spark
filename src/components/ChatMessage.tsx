@@ -2,7 +2,8 @@
 import React from "react";
 import { Message } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { ChevronRight, BarChart, User } from "lucide-react";
+import { BarChart, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
   message: Message;
@@ -33,12 +34,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           isUser ? "user-bubble" : "assistant-bubble"
         )}
       >
-        {message.content.split("\n").map((line, i) => (
-          <React.Fragment key={i}>
-            {line}
-            {i < message.content.split("\n").length - 1 && <br />}
-          </React.Fragment>
-        ))}
+        {isUser ? (
+          message.content
+        ) : (
+          <ReactMarkdown
+            components={{
+              h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-primary mb-2" {...props} />,
+              h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-primary mb-2" {...props} />,
+              h3: ({ node, ...props }) => <h3 className="text-md font-bold text-primary mb-1" {...props} />,
+              h4: ({ node, ...props }) => <h4 className="text-sm font-bold text-primary mb-1" {...props} />,
+              strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+              p: ({ node, ...props }) => <p className="mb-2" {...props} />
+            }}
+          >
+            {message.content}
+          </ReactMarkdown>
+        )}
         
         {!isUser && (
           <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
