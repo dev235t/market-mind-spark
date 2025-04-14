@@ -43,7 +43,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               h2: ({ node, ...props }) => <h2 className="text-lg font-bold text-primary mb-2" {...props} />,
               h3: ({ node, ...props }) => <h3 className="text-md font-bold text-primary mb-1" {...props} />,
               h4: ({ node, ...props }) => <h4 className="text-sm font-bold text-primary mb-1" {...props} />,
-              strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
+              strong: ({ node, ...props }) => <strong className="font-bold text-green-600" {...props} />,
               p: ({ node, ...props }) => <p className="mb-2" {...props} />
             }}
           >
